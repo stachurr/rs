@@ -19,10 +19,10 @@ namespace _private {
     #pragma push_macro("INFO_COLOR")
     #pragma push_macro("TRACE_COLOR")
     #if RS_LOG_ENABLE_COLOR
-        #define ERROR_COLOR     RS_RGB(239, 71, 111)
-        #define WARN_COLOR      RS_RGB(255, 209, 102)
-        #define INFO_COLOR      RS_RGB(17, 138, 178)
-        #define TRACE_COLOR     RS_RGB(100, 100, 100) //RS_GRAY //RS_RGB(7, 59, 76)
+        #define ERROR_COLOR     RS_TEXT_COLOR_RGB(239, 71, 111)
+        #define WARN_COLOR      RS_TEXT_COLOR_RGB(255, 209, 102)
+        #define INFO_COLOR      RS_TEXT_COLOR_RGB(17, 138, 178)
+        #define TRACE_COLOR     RS_TEXT_COLOR_RGB(100, 100, 100) //RS_TEXT_COLOR_GRAY //RS_RGB(7, 59, 76)
     #else
         #define ERROR_COLOR     ""
         #define WARN_COLOR      ""
@@ -31,10 +31,10 @@ namespace _private {
     #endif
 #pragma endregion
     static const char* LOG_LEVEL_TITLES[] = {
-        ERROR_COLOR "ERROR" RS_DEFAULT,
-        WARN_COLOR  "WARN"  RS_DEFAULT,
-        INFO_COLOR  "INFO"  RS_DEFAULT,
-        TRACE_COLOR "TRACE" RS_DEFAULT
+        ERROR_COLOR "ERROR" RS_TEXT_COLOR_DEFAULT,
+        WARN_COLOR  "WARN"  RS_TEXT_COLOR_DEFAULT,
+        INFO_COLOR  "INFO"  RS_TEXT_COLOR_DEFAULT,
+        TRACE_COLOR "TRACE" RS_TEXT_COLOR_DEFAULT
     };
 #pragma region "Undefine & Pop Log Level Colors"
     #undef ERROR_COLOR
@@ -86,7 +86,7 @@ namespace _private {
             if (level <= RS_GLOBAL_LOG_LEVEL) {
                 // Format and print.
                 if (auto s = format_string(loc.wrapped_value(), args...)) {
-                    RS_LOG_FUNC(RS_DEFAULT "[%s]\t%s\t" RS_GRAY "%s: %u" RS_DEFAULT "\n", get_level_string(level), s.get(), loc.short_file_name(), loc.line());
+                    RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "[%s]\t%s\t" RS_TEXT_COLOR_GRAY "%s: %u" RS_TEXT_COLOR_DEFAULT "\n", get_level_string(level), s.get(), loc.short_file_name(), loc.line());
                 }
                 // Report formatting error.
                 else {
@@ -94,7 +94,7 @@ namespace _private {
                     if (0 != strerror_s(buffer.get(), 512, errno)) {
                         memcpy(buffer.get(), "nullptr", 8);
                     }
-                    RS_LOG_FUNC(RS_DEFAULT "[%s] An error occurred formatting a string: %s\n", get_level_string(level_t::ERROR), buffer.get());
+                    RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "[%s] An error occurred formatting a string: %s\n", get_level_string(level_t::ERROR), buffer.get());
                 }
             }
         }
