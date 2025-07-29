@@ -18,33 +18,38 @@ namespace _private {
     #pragma push_macro("WARN_COLOR")
     #pragma push_macro("INFO_COLOR")
     #pragma push_macro("TRACE_COLOR")
+    #pragma push_macro("DEFAULT_COLOR")
     #if RS_LOG_ENABLE_COLOR
         #define ERROR_COLOR     RS_TEXT_COLOR_RGB(239, 71, 111)
         #define WARN_COLOR      RS_TEXT_COLOR_RGB(255, 209, 102)
         #define INFO_COLOR      RS_TEXT_COLOR_RGB(17, 138, 178)
         #define TRACE_COLOR     RS_TEXT_COLOR_RGB(100, 100, 100) //RS_TEXT_COLOR_GRAY //RS_RGB(7, 59, 76)
+        #define DEFAULT_COLOR   RS_TEXT_COLOR_DEFAULT
     #else
         #define ERROR_COLOR     ""
         #define WARN_COLOR      ""
         #define INFO_COLOR      ""
         #define TRACE_COLOR     ""
+        #define DEFAULT_COLOR   ""
     #endif
 #pragma endregion
     static const char* LOG_LEVEL_TITLES[] = {
-        ERROR_COLOR "ERROR" RS_TEXT_COLOR_DEFAULT,
-        WARN_COLOR  "WARN"  RS_TEXT_COLOR_DEFAULT,
-        INFO_COLOR  "INFO"  RS_TEXT_COLOR_DEFAULT,
-        TRACE_COLOR "TRACE" RS_TEXT_COLOR_DEFAULT
+        ERROR_COLOR "ERROR" DEFAULT_COLOR,
+        WARN_COLOR  "WARN"  DEFAULT_COLOR,
+        INFO_COLOR  "INFO"  DEFAULT_COLOR,
+        TRACE_COLOR "TRACE" DEFAULT_COLOR
     };
 #pragma region "Undefine & Pop Log Level Colors"
     #undef ERROR_COLOR
     #undef WARN_COLOR
     #undef INFO_COLOR
     #undef TRACE_COLOR
+    #undef DEFAULT_COLOR
     #pragma pop_macro("ERROR_COLOR")
     #pragma pop_macro("WARN_COLOR")
     #pragma pop_macro("INFO_COLOR")
     #pragma pop_macro("TRACE_COLOR")
+    #pragma pop_macro("DEFAULT_COLOR")
 #pragma endregion
 
     static constexpr const char *const get_level_string (level_t level) {
