@@ -12,12 +12,17 @@
 #if RS_ENABLE_LOG
     // Logging function used to print to stdout (must have signature `int (const char*, ...)`).
     #define RS_LOG_FUNC             printf
+    #define RS_LOG_FUNC_INC         "stdio.h"
 
     // Enable colored text when printing to stdout (0: disabled, 1: enabled).
     #define RS_LOG_ENABLE_COLOR     1
 
     // Set the maximum log level (ERROR, WARN, INFO, TRACE, NONE).
     #define RS_GLOBAL_LOG_LEVEL     level_t::TRACE
+
+    // The maximum string length to allow.
+    #define RS_LOG_MAX_STRLEN   1024
+    
 #endif // RS_ENABLE_LOG
 
 

@@ -1,7 +1,9 @@
 #include <iostream>
 #include "rs.h"
 
-static void rs_test (void) {
-    std::cout << "rs" << std::endl;
+void rs_test (void) {
+    using namespace rs;
+
+    log::warn("This is a warning!");
 }
 

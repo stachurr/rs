@@ -1,13 +1,16 @@
 #ifndef RS_LOG_PRIVATE_H
 #define RS_LOG_PRIVATE_H
 
+#include "log/rs_log_level.h"
+#include "ansi/rs_ansi.h"
+#include "util/rs_util.h"
+
+#include RS_LOG_FUNC_INC
+
 #include <type_traits>
 #include <memory>
 #include <source_location>
 
-#include "log/rs_log_level.h"
-#include "ansi/rs_ansi.h"
-#include "util/rs_util.h"
 
 namespace rs {
 namespace log {
@@ -33,11 +36,11 @@ namespace _private {
         #define DEFAULT_COLOR   ""
     #endif
 #pragma endregion
-    static const char* LOG_LEVEL_TITLES[] = {
-        ERROR_COLOR "ERROR" DEFAULT_COLOR,
-        WARN_COLOR  "WARN"  DEFAULT_COLOR,
-        INFO_COLOR  "INFO"  DEFAULT_COLOR,
-        TRACE_COLOR "TRACE" DEFAULT_COLOR
+    static constexpr const char* LOG_LEVEL_TITLES[] = {
+        ERROR_COLOR "[ERROR]" DEFAULT_COLOR,
+        WARN_COLOR  "[WARN] " DEFAULT_COLOR,
+        INFO_COLOR  "[INFO] " DEFAULT_COLOR,
+        TRACE_COLOR "[TRACE]" DEFAULT_COLOR
     };
 #pragma region "Undefine & Pop Log Level Colors"
     #undef ERROR_COLOR
@@ -56,31 +59,84 @@ namespace _private {
         return LOG_LEVEL_TITLES[static_cast<std::underlying_type_t<level_t>>(level) - 1];
     }
 
-    template<typename... ArgTypes>
-    static std::unique_ptr<char[]> format_string (const char *const RS_RESTRICT format, ArgTypes&&... args) {
-        auto s = std::unique_ptr<char[]>(nullptr);
+    class maybe_string {
+    public:
+        maybe_string (std::nullptr_t)
+            : m_data_unowned (nullptr)
+            , m_length       (0)
+            , m_owned        (false)
+        {}
 
+        maybe_string (const char* str)
+            : m_data_unowned (str)
+            , m_length       (strnlen_s(str, RS_LOG_MAX_STRLEN))
+            , m_owned        (false)
+        {}
+
+        maybe_string (std::unique_ptr<char[]> str)
+            : m_data_owned  (std::move(str))
+            , m_length      (strnlen_s(m_data_owned.get(), RS_LOG_MAX_STRLEN))
+            , m_owned       (true)
+        {}
+
+        ~maybe_string (void) {
+            if (m_owned) {
+                m_data_owned.reset();
+            }
+        }
+
+        maybe_string (void)                 = delete;
+        maybe_string (const maybe_string&)  = delete;
+        maybe_string (maybe_string&&)       = delete;
+
+
+        constexpr const char* c_str (void) const noexcept {
+            return (m_length == RS_LOG_MAX_STRLEN)
+                ? nullptr       // strnlen_s did not find null terminator
+                : (m_owned)
+                    ? m_data_owned.get()
+                    : m_data_unowned;
+        }
+
+        constexpr size_t length (void) const noexcept {
+            return (m_length == RS_LOG_MAX_STRLEN)
+                ? 0     // strnlen_s did not find null terminator
+                : m_length;
+        }
+
+        constexpr operator bool (void) const {
+            return static_cast<bool>(this->c_str());
+        }
+
+    private:
+        union {
+            const char* const       m_data_unowned;
+            std::unique_ptr<char[]> m_data_owned;
+        };
+        const size_t m_length;
+        const bool m_owned;
+    };
+
+    template<typename... ArgTypes>
+    static maybe_string format_string (const char *const RS_RESTRICT format, ArgTypes&&... args) {
         if constexpr (sizeof...(ArgTypes) > 0) {
             // Check format validity.
             // https://en.cppreference.com/w/cpp/io/c/snprintf
             const int size_req = 1 + std::snprintf(nullptr, 0, format, args...);    // +1 for null-terminator
 
             if (size_req > 0) {
-                s.reset(new char[size_req]);
-                const int a = std::snprintf(s.get(), size_req, format, args...);
+                auto s = std::unique_ptr<char[]>(new char[size_req]);
+                (void) std::snprintf(s.get(), size_req, format, args...);
+                return maybe_string(std::move(s));
             }
             else {
-                throw std::invalid_argument("Invalid format string");
+                return maybe_string(nullptr);
             }
         }
         else {
-            // No formatting required. Maybe we can avoid copying somehow...
-            const auto N = strlen(format);
-            s.reset(new char[N + 1]);
-            std::memcpy(s.get(), format, N + 1);
+            // No formatting required.
+            return maybe_string(format);
         }
-
-        return s;
     }
 
     template<typename... ArgTypes>
@@ -90,17 +146,22 @@ namespace _private {
             // Don't log anything above the global log level.
             if (level <= RS_GLOBAL_LOG_LEVEL) {
                 // Format and print.
-                if (auto s = format_string(loc.wrapped_value(), args...)) {
-                    RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "[%s]\t%s\t" RS_TEXT_COLOR_GRAY "%s: %u" RS_TEXT_COLOR_DEFAULT "\n", get_level_string(level), s.get(), loc.short_file_name(), loc.line());
+                const maybe_string maybe_str = format_string(loc.value(), args...);
+                const char* message;
+
+                if (maybe_str) {
+                    message = maybe_str.c_str();
                 }
-                // Report formatting error.
                 else {
-                    auto buffer = std::unique_ptr<char[]>(new char[512]);
-                    if (0 != strerror_s(buffer.get(), 512, errno)) {
-                        memcpy(buffer.get(), "nullptr", 8);
-                    }
-                    RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "[%s] An error occurred formatting a string: %s\n", get_level_string(level_t::ERROR), buffer.get());
+                    level = level_t::ERROR;
+                    message = "<cannot format string>";
                 }
+
+                RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "%s %s\t" RS_TEXT_COLOR_GRAY "%s: %u" RS_TEXT_COLOR_DEFAULT "\n",
+                    get_level_string(level),
+                    message,
+                    loc.short_file_name(),
+                    loc.line());
             }
         }
     }

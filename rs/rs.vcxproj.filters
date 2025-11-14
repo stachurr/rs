@@ -22,11 +22,11 @@
     <Filter Include="Header Files\inc\log">
       <UniqueIdentifier>{a7c191be-0d39-4a76-9366-ca6483d90510}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\inc\private">
-      <UniqueIdentifier>{43dc6a59-ad66-4c40-9b4b-128bfd874220}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\inc\util">
       <UniqueIdentifier>{a328c62c-66d9-41a1-bfaf-9ed706195d5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\inc\config">
+      <UniqueIdentifier>{43dc6a59-ad66-4c40-9b4b-128bfd874220}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -48,14 +48,14 @@
     <ClInclude Include="inc\log\rs_log_private.h">
       <Filter>Header Files\inc\log</Filter>
     </ClInclude>
-    <ClInclude Include="inc\private\rs_config_private.h">
-      <Filter>Header Files\inc\private</Filter>
-    </ClInclude>
     <ClInclude Include="inc\util\rs_util.h">
       <Filter>Header Files\inc\util</Filter>
     </ClInclude>
     <ClInclude Include="inc\util\rs_util_private.h">
       <Filter>Header Files\inc\util</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\config\rs_config_private.h">
+      <Filter>Header Files\inc\config</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

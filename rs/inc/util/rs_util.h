@@ -3,6 +3,8 @@
 
 #include "util/rs_util_private.h"
 
+#include <type_traits>
+
 namespace rs {
 namespace util {
 
@@ -15,6 +17,10 @@ namespace util {
             , m_short_file_name (_private::consteval_source_location_get_shortname(loc))
         {}
 
+        consteval source_location_capture (void) = delete;
+        consteval source_location_capture (const source_location_capture&) = delete;
+        consteval source_location_capture (source_location_capture&&) = delete;
+
 
         // The line number.
         constexpr uint_least32_t line() const noexcept {
@@ -26,7 +32,7 @@ namespace util {
             return m_loc.column();
         }
 
-        // The file name.
+        // The file name (absolute path).
         constexpr const char* file_name() const noexcept {
             return m_loc.file_name();
         }
@@ -43,7 +49,7 @@ namespace util {
         }
 
         // The wrapped value.
-        constexpr std::remove_reference_t<T>& wrapped_value (void) const noexcept {
+        constexpr std::remove_reference_t<T>& value (void) const noexcept {
             return m_value;
         }
 

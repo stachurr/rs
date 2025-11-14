@@ -1,7 +1,7 @@
 #ifndef RS_LOG_H
 #define RS_LOG_H
 
-#include "private/rs_config_private.h"
+#include "config/rs_config_private.h"
 #if RS_ENABLE_LOG
 
 #include "log/rs_log_private.h"
