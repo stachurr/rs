@@ -17,11 +17,11 @@
     // Enable colored text when printing to stdout (0: disabled, 1: enabled).
     #define RS_LOG_ENABLE_COLOR     1
 
-    // Set the maximum log level (ERROR, WARN, INFO, TRACE, NONE).
-    #define RS_GLOBAL_LOG_LEVEL     level_t::TRACE
+    // // Set the maximum log level (DISABLED, ERROR, WARN, INFO, TRACE, ALL).
+    // #define RS_LOG_LEVEL_GLOBAL     ALL
 
-    // The maximum string length to allow.
-    #define RS_LOG_MAX_STRLEN   1024
+    // // The maximum string length to allow.
+    // #define RS_LOG_MAX_STRLEN   1024
     
 #endif // RS_ENABLE_LOG
 

@@ -2,7 +2,6 @@
 #define RS_LOG_PRIVATE_H
 
 #include "log/rs_log_level.h"
-#include "ansi/rs_ansi.h"
 #include "util/rs_util.h"
 
 #include RS_LOG_FUNC_INC
@@ -10,102 +9,64 @@
 #include <type_traits>
 #include <memory>
 #include <source_location>
+#include <fstream>
 
 
 namespace rs {
 namespace log {
 namespace _private {
 
-#pragma region "Push & Define Log Level Colors"
-    #pragma push_macro("ERROR_COLOR")
-    #pragma push_macro("WARN_COLOR")
-    #pragma push_macro("INFO_COLOR")
-    #pragma push_macro("TRACE_COLOR")
-    #pragma push_macro("DEFAULT_COLOR")
-    #if RS_LOG_ENABLE_COLOR
-        #define ERROR_COLOR     RS_TEXT_COLOR_RGB(239, 71, 111)
-        #define WARN_COLOR      RS_TEXT_COLOR_RGB(255, 209, 102)
-        #define INFO_COLOR      RS_TEXT_COLOR_RGB(17, 138, 178)
-        #define TRACE_COLOR     RS_TEXT_COLOR_RGB(100, 100, 100) //RS_TEXT_COLOR_GRAY //RS_RGB(7, 59, 76)
-        #define DEFAULT_COLOR   RS_TEXT_COLOR_DEFAULT
-    #else
-        #define ERROR_COLOR     ""
-        #define WARN_COLOR      ""
-        #define INFO_COLOR      ""
-        #define TRACE_COLOR     ""
-        #define DEFAULT_COLOR   ""
-    #endif
-#pragma endregion
-    static constexpr const char* LOG_LEVEL_TITLES[] = {
-        ERROR_COLOR "[ERROR]" DEFAULT_COLOR,
-        WARN_COLOR  "[WARN] " DEFAULT_COLOR,
-        INFO_COLOR  "[INFO] " DEFAULT_COLOR,
-        TRACE_COLOR "[TRACE]" DEFAULT_COLOR
-    };
-#pragma region "Undefine & Pop Log Level Colors"
-    #undef ERROR_COLOR
-    #undef WARN_COLOR
-    #undef INFO_COLOR
-    #undef TRACE_COLOR
-    #undef DEFAULT_COLOR
-    #pragma pop_macro("ERROR_COLOR")
-    #pragma pop_macro("WARN_COLOR")
-    #pragma pop_macro("INFO_COLOR")
-    #pragma pop_macro("TRACE_COLOR")
-    #pragma pop_macro("DEFAULT_COLOR")
-#pragma endregion
+    // static constexpr level GLOBAL_LEVEL = level::RS_LOG_LEVEL_GLOBAL;
 
-    static constexpr const char *const get_level_string (level_t level) {
-        return LOG_LEVEL_TITLES[static_cast<std::underlying_type_t<level_t>>(level) - 1];
-    }
+    // static constexpr const char *const get_level_string (level log_level) {
+    //     return LEVEL_STRINGS[static_cast<std::underlying_type_t<level>>(log_level) - 1];
+    //     static_assert(sizeof(LEVEL_STRINGS)/sizeof(LEVEL_STRINGS[0]) == static_cast<std::underlying_type_t<level>>(level::N_LEVELS) - 1);
+    // }
 
-    class maybe_string {
+
+    /*
+    // Helper to wrap a C-string whether owned or unowned.
+    class unique_cstring {
     public:
-        maybe_string (std::nullptr_t)
-            : m_data_unowned (nullptr)
-            , m_length       (0)
-            , m_owned        (false)
+        // Disable implicit ctors
+        unique_cstring (void)                   = delete;
+        unique_cstring (const unique_cstring&)  = delete;
+        unique_cstring (unique_cstring&&)       = delete;
+
+        unique_cstring (const char* promise_it_persists_str)
+            : m_data_unowned (promise_it_persists_str)
+            , m_is_owned     (false)
         {}
 
-        maybe_string (const char* str)
-            : m_data_unowned (str)
-            , m_length       (strnlen_s(str, RS_LOG_MAX_STRLEN))
-            , m_owned        (false)
+        // Do not free this string when we're done!
+        template<size_t N>
+        consteval unique_cstring (const char (&static_str)[N])
+            : m_data_unowned (static_str)
+            , m_is_owned     (false)
         {}
 
-        maybe_string (std::unique_ptr<char[]> str)
+        // Free this string when we're done!
+        unique_cstring (std::unique_ptr<char[]> str)
             : m_data_owned  (std::move(str))
-            , m_length      (strnlen_s(m_data_owned.get(), RS_LOG_MAX_STRLEN))
-            , m_owned       (true)
+            , m_is_owned    (true)
         {}
 
-        ~maybe_string (void) {
-            if (m_owned) {
-                m_data_owned.reset();
+        // Make sure to free if owned!
+        virtual ~unique_cstring (void) {
+            if (m_is_owned) {
+                m_data_owned.reset(nullptr);
             }
         }
 
-        maybe_string (void)                 = delete;
-        maybe_string (const maybe_string&)  = delete;
-        maybe_string (maybe_string&&)       = delete;
 
-
-        constexpr const char* c_str (void) const noexcept {
-            return (m_length == RS_LOG_MAX_STRLEN)
-                ? nullptr       // strnlen_s did not find null terminator
-                : (m_owned)
-                    ? m_data_owned.get()
-                    : m_data_unowned;
-        }
-
-        constexpr size_t length (void) const noexcept {
-            return (m_length == RS_LOG_MAX_STRLEN)
-                ? 0     // strnlen_s did not find null terminator
-                : m_length;
+        constexpr const char* get (void) const noexcept {
+            return (m_is_owned)
+                ? m_data_owned.get()
+                : m_data_unowned;
         }
 
         constexpr operator bool (void) const {
-            return static_cast<bool>(this->c_str());
+            return this->get();
         }
 
     private:
@@ -113,12 +74,11 @@ namespace _private {
             const char* const       m_data_unowned;
             std::unique_ptr<char[]> m_data_owned;
         };
-        const size_t m_length;
-        const bool m_owned;
+        const bool m_is_owned;
     };
 
     template<typename... ArgTypes>
-    static maybe_string format_string (const char *const RS_RESTRICT format, ArgTypes&&... args) {
+    static const unique_cstring format_string (const char *const RS_RESTRICT format, ArgTypes&&... args) {
         if constexpr (sizeof...(ArgTypes) > 0) {
             // Check format validity.
             // https://en.cppreference.com/w/cpp/io/c/snprintf
@@ -127,45 +87,42 @@ namespace _private {
             if (size_req > 0) {
                 auto s = std::unique_ptr<char[]>(new char[size_req]);
                 (void) std::snprintf(s.get(), size_req, format, args...);
-                return maybe_string(std::move(s));
+                return unique_cstring(std::move(s));
             }
             else {
-                return maybe_string(nullptr);
+                return unique_cstring(nullptr);
             }
         }
         else {
             // No formatting required.
-            return maybe_string(format);
+            return unique_cstring(format);
         }
     }
 
+
+
     template<typename... ArgTypes>
-    static void log (level_t level, rs_source_location_capture_cstring&& loc, ArgTypes&&... args) {
-        // Enabled logging if global log level is not NONE.
-        if constexpr (RS_GLOBAL_LOG_LEVEL > level_t::NONE) {
+    static constexpr void log (level&& log_level, rs_source_context&& ctx, ArgTypes&&... args) {
+        if constexpr (GLOBAL_LEVEL > level::DISABLED) {
             // Don't log anything above the global log level.
-            if (level <= RS_GLOBAL_LOG_LEVEL) {
-                // Format and print.
-                const maybe_string maybe_str = format_string(loc.value(), args...);
-                const char* message;
+            if (log_level <= GLOBAL_LEVEL) {
+                const unique_cstring formatted = format_string(ctx.c_str(), args...);
+                const char* message = formatted.get();
 
-                if (maybe_str) {
-                    message = maybe_str.c_str();
-                }
-                else {
-                    level = level_t::ERROR;
-                    message = "<cannot format string>";
+                if (!message) {
+                    message = "" RS_TEXT_COLOR_DARK_RED "(failed to format string)" RS_TEXT_COLOR_DEFAULT;
+                    log_level = level::ERROR;
                 }
 
-                RS_LOG_FUNC(RS_TEXT_COLOR_DEFAULT "%s %s\t" RS_TEXT_COLOR_GRAY "%s: %u" RS_TEXT_COLOR_DEFAULT "\n",
-                    get_level_string(level),
+                RS_LOG_FUNC("" RS_TEXT_COLOR_DEFAULT "%s %s\t" RS_TEXT_COLOR_GRAY "%s: %u" RS_TEXT_COLOR_DEFAULT "\n",
+                    get_level_string(log_level),
                     message,
-                    loc.short_file_name(),
-                    loc.line());
+                    ctx.file_name(),
+                    ctx.location().line());
             }
         }
     }
-
+    */
 } // rs::log::_private
 } // rs::log
 } // rs

@@ -24,9 +24,9 @@
         #define RS_LOG_ENABLE_COLOR     0
     #endif
 
-    #ifndef RS_GLOBAL_LOG_LEVEL
-        #define RS_GLOBAL_LOG_LEVEL     level_t::WARN
-    #endif
+    // #ifndef RS_LOG_LEVEL_GLOBAL
+    //     #define RS_LOG_LEVEL_GLOBAL     INFO
+    // #endif
 #endif
 
 
