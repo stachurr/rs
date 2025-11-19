@@ -6,6 +6,6 @@
 #include "ansi/rs_ansi.h"
 #include "util/rs_util.h"
 
-void rs_test (void);
+void rs_example (void);
 
 #endif // RS_H

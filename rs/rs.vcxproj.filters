@@ -28,6 +28,9 @@
     <Filter Include="Header Files\inc\config">
       <UniqueIdentifier>{43dc6a59-ad66-4c40-9b4b-128bfd874220}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{0737278f-1ea5-4d89-b185-c2aba281d9e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rs.h">
@@ -57,10 +60,22 @@
     <ClInclude Include="inc\config\rs_config_private.h">
       <Filter>Header Files\inc\config</Filter>
     </ClInclude>
+    <ClInclude Include="inc\log\rs_log_level_private.h">
+      <Filter>Header Files\inc\log</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\log\rs_log_context.h">
+      <Filter>Header Files\inc\log</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\ansi\rs_ansi_2.h">
+      <Filter>Header Files\inc\ansi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\rs.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\rs_util.cpp">
+      <Filter>Source Files\util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
