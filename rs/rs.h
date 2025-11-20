@@ -6,6 +6,6 @@
 #include "ansi/rs_ansi.h"
 #include "util/rs_util.h"
 
-void rs_example (void);
+void rs_example (const char* text = "The cake is a lie.");
 
 #endif // RS_H

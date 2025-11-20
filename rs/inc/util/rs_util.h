@@ -15,7 +15,7 @@ namespace util {
         template<size_t N>
         consteval string_literal (const char (&str)[N])
             : m_data (str)
-            , m_length  (N - 1)
+            // , m_length  (N - 1)
         {}
         
         template<size_t N>
@@ -32,14 +32,14 @@ namespace util {
             return m_data;
         }
 
-        constexpr size_t length (void) const noexcept {
-            return m_length;
-        }
+        // constexpr size_t length (void) const noexcept {
+        //     return m_length;
+        // }
 
 
     private:
         const char* const   m_data;
-        const size_t        m_length;
+        // const size_t        m_length;
     };
 
 
@@ -127,7 +127,7 @@ namespace util {
     static constexpr managed_cstring format_string (string_literal format, FormatArgTypes&&... args) {
         if constexpr (sizeof...(FormatArgTypes) > 0) {
             // (Check format validity)[https://en.cppreference.com/w/cpp/io/c/snprintf]
-            const int size_req = 1 + std::snprintf(nullptr, 0, format, args...);    // +1 for null-terminator
+            int size_req = std::snprintf(nullptr, 0, format, args...);
 
             if (size_req > 0) {
                 auto str = std::unique_ptr<char[]>(new char[size_req]);
