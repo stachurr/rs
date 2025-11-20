@@ -4,18 +4,15 @@
 
 
 void rs_example (void) {
-    // printf("%s\n", "abc"_red);
-    // printf("%s\n", "abc"_green);
+    constexpr auto FG_RED_BG_GREEN = SGR_FG_RED + SGR_BG_GREEN;
     constexpr auto hello_defaulted = red("Hello");
     constexpr auto hello_not_defaulted = red<false>("Hello");
 
-    printf("%*s", BG_GREEN->size(), BG_GREEN->data());
-    printf("%*s""hi""%*s", FG_RED->size(), FG_RED->data(), FG_DEFAULT->size(), FG_DEFAULT->data());
-    printf("%*s", BG_DEFAULT->size(), BG_DEFAULT->data());
-    printf("%*s""hi""%*s", FG_GREEN->size(), FG_GREEN->data(), FG_DEFAULT->size(), FG_DEFAULT->data());
-    puts("");
-    printf("a: \"%s, world!\"\n", hello_defaulted->data());
-    printf("b: \"%s, world!\x1b[0m\"\n", hello_not_defaulted->data());
+    printf(">>> %s <<<\n", (FG_RED_BG_GREEN + "red text with a green background" + SGR_RESET)->data());
+    printf("    defaulted: \"%s, world!\"\n", hello_defaulted->data());
+    printf("not defaulted: \"%s, world!\x1b[0m\"\n", hello_not_defaulted->data());
+    // debug_print(hello_defaulted);
+    // debug_print(hello_not_defaulted);
 
     return;
 
